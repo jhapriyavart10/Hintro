@@ -1,87 +1,44 @@
+// src/store/useBoardStore.js
+
 import { create } from 'zustand'
+import api from '@/services/api' // Ensure this service exists and exports methods like api.getBoard(id)
 
 const useBoardStore = create((set, get) => ({
-  boards: [
-    {
-      id: 'product-roadmap',
-      name: 'Product Roadmap',
-      color: 'bg-blue-500',
-      lists: [
-        {
-          id: 'list-1',
-          title: 'Backlog',
-          boardId: 'product-roadmap',
-          position: 0,
-          tasks: [
-            {
-              id: 'task-1',
-              title: 'Design new dashboard layout',
-              description: 'Create wireframes and high-fidelity mockups',
-              listId: 'list-1',
-              position: 0,
-              priority: 'high',
-              assignee: { name: 'John Doe', avatar: 'JD' },
-              labels: ['design', 'ui'],
-            },
-            {
-              id: 'task-2',
-              title: 'Implement user authentication',
-              description: 'Add OAuth2 login flow',
-              listId: 'list-1',
-              position: 1,
-              priority: 'medium',
-              assignee: { name: 'Jane Smith', avatar: 'JS' },
-              labels: ['backend', 'security'],
-            },
-          ],
-        },
-        {
-          id: 'list-2',
-          title: 'In Progress',
-          boardId: 'product-roadmap',
-          position: 1,
-          tasks: [
-            {
-              id: 'task-3',
-              title: 'Set up CI/CD pipeline',
-              description: 'Configure GitHub Actions for automated deployments',
-              listId: 'list-2',
-              position: 0,
-              priority: 'high',
-              assignee: { name: 'John Doe', avatar: 'JD' },
-              labels: ['devops'],
-            },
-          ],
-        },
-        {
-          id: 'list-3',
-          title: 'Review',
-          boardId: 'product-roadmap',
-          position: 2,
-          tasks: [],
-        },
-        {
-          id: 'list-4',
-          title: 'Done',
-          boardId: 'product-roadmap',
-          position: 3,
-          tasks: [
-            {
-              id: 'task-4',
-              title: 'Setup project repository',
-              description: 'Initialize Git and configure project structure',
-              listId: 'list-4',
-              position: 0,
-              priority: 'low',
-              assignee: { name: 'John Doe', avatar: 'JD' },
-              labels: ['setup'],
-            },
-          ],
-        },
-      ],
-    },
-  ],
-  activeBoard: 'product-roadmap',
+  boards: [],
+  activeBoard: null, // No hardcoded ID
+  isLoading: false,
+  error: null,
+
+  // Async Actions
+  fetchBoard: async (boardId) => {
+    set({ isLoading: true, error: null })
+    try {
+      // Assuming your api service has a method to get a board
+      // If not, use: await api.get(`/boards/${boardId}`)
+      const response = await api.getBoard(boardId) 
+      const boardData = response.data || response // Adjust based on your axios response structure
+
+      set((state) => {
+        // Check if board already exists in store to update it, or add it
+        const exists = state.boards.find((b) => b.id === boardData.id)
+        if (exists) {
+            return {
+                boards: state.boards.map(b => b.id === boardData.id ? boardData : b),
+                activeBoard: boardData.id,
+                isLoading: false
+            }
+        }
+        return {
+            boards: [...state.boards, boardData],
+            activeBoard: boardData.id,
+            isLoading: false
+        }
+      })
+    } catch (error) {
+      console.error('Failed to fetch board:', error)
+      set({ error: error.message, isLoading: false })
+    }
+  },
 
   // Getters
   getBoard: (boardId) => {

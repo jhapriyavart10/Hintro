@@ -5,6 +5,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import compression from 'compression'
 import dotenv from 'dotenv'
+import authRoutes from './routes/auth.js' // <--- Added this
 import boardRoutes from './routes/boards.js'
 import listRoutes from './routes/lists.js'
 import taskRoutes from './routes/tasks.js'
@@ -37,6 +38,7 @@ app.use((req, res, next) => {
 })
 
 // API Routes
+app.use('/api/auth', authRoutes) // <--- Added this
 app.use('/api/boards', boardRoutes)
 app.use('/api/lists', listRoutes)
 app.use('/api/tasks', taskRoutes)

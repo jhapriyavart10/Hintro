@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,13 +11,15 @@ model User {
   id        String   @id @default(uuid())
   email     String   @unique
   name      String
+  password  String
   avatar    String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  boards    BoardMember[]
-  tasks     Task[]        @relation("AssignedTasks")
-  comments  Comment[]
+  boards       BoardMember[]
+  tasks        Task[]        @relation("AssignedTasks")
+  comments     Comment[]
+  activityLogs ActivityLog[]
 }
 
 model Board {
@@ -31,8 +30,9 @@ model Board {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
-  lists   List[]
-  members BoardMember[]
+  lists        List[]
+  members      BoardMember[]
+  activityLogs ActivityLog[]
 }
 
 model BoardMember {
@@ -64,14 +64,14 @@ model List {
 }
 
 model Task {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   title       String
   description String?
-  position    Int      @default(0)
-  priority    String   @default("medium") // low, medium, high
+  position    Int       @default(0)
+  priority    String    @default("medium") // low, medium, high
   dueDate     DateTime?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
 
   listId String
   list   List   @relation(fields: [listId], references: [id], onDelete: Cascade)
@@ -79,12 +79,34 @@ model Task {
   assigneeId String?
   assignee   User?   @relation("AssignedTasks", fields: [assigneeId], references: [id])
 
-  labels      TaskLabel[]
-  attachments Attachment[]
-  comments    Comment[]
+  labels       TaskLabel[]
+  attachments  Attachment[]
+  comments     Comment[]
+  activityLogs ActivityLog[]
 
   @@index([listId])
   @@index([assigneeId])
+}
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  action    String // e.g., "moved", "created", "commented"
+  entityType String // "TASK", "LIST", "BOARD"
+  entityId   String
+  details    String? // e.g., "Moved task from Backlog to Done"
+  
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  boardId String
+  board   Board  @relation(fields: [boardId], references: [id], onDelete: Cascade)
+  
+  taskId String?
+  task   Task? @relation(fields: [taskId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([boardId])
 }
 
 model Label {
