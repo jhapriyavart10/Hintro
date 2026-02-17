@@ -33,9 +33,6 @@ api.interceptors.response.use(
   }
 )
 
-// 3. Attach Helper Methods (The "Hybrid" Part)
-// This ensures api.getBoard() works AND api.get() works
-
 // --- Boards ---
 api.getBoards = () => api.get('/boards')
 api.getBoard = (id) => api.get(`/boards/${id}`)
@@ -57,5 +54,9 @@ api.deleteTask = (id) => api.delete(`/tasks/${id}`)
 // --- Auth ---
 api.login = (data) => api.post('/auth/login', data)
 api.register = (data) => api.post('/auth/register', data)
+
+api.getComments = (taskId) => api.get(`/comments/${taskId}`)
+api.createComment = (data) => api.post('/comments', data)
+api.getActivity = (boardId, page = 1) => api.get(`/activity/${boardId}?page=${page}&limit=10`)
 
 export default api

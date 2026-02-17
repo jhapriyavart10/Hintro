@@ -322,6 +322,8 @@ const Board = () => {
           task={selectedTask}
           isOpen={!!selectedTask}
           onClose={() => setSelectedTask(null)}
+          members={board.members}  
+          boardId={activeBoardId}
           onUpdate={(updates) => {
             handleUpdateTask(selectedTask.listId, selectedTask.id, updates)
             setSelectedTask({ ...selectedTask, ...updates })

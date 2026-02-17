@@ -10,6 +10,8 @@ import boardRoutes from './routes/boards.js'
 import listRoutes from './routes/lists.js'
 import taskRoutes from './routes/tasks.js'
 import { setupSocketHandlers } from './socket/index.js'
+import commentRoutes from './routes/comments.js' 
+import activityRoutes from './routes/activity.js'
 
 dotenv.config()
 
@@ -38,10 +40,12 @@ app.use((req, res, next) => {
 })
 
 // API Routes
-app.use('/api/auth', authRoutes) // <--- Added this
+app.use('/api/auth', authRoutes) 
 app.use('/api/boards', boardRoutes)
 app.use('/api/lists', listRoutes)
 app.use('/api/tasks', taskRoutes)
+app.use('/api/comments', commentRoutes) 
+app.use('/api/activity', activityRoutes)
 
 // Health check
 app.get('/api/health', (req, res) => {

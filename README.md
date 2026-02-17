@@ -1,374 +1,197 @@
-# Hintro AI - Real-Time Task Collaboration Platform
+# Hintro AI - Real-Time Collaboration Platform
 
-A **production-ready**, high-polish task collaboration platform (Trello/Notion hybrid) with real-time capabilities. Built with a professional, VC-backed startup aesthetic inspired by Linear, Vercel, and Notion.
+Hintro AI is a production-ready, real-time task management platform inspired by the best features of Trello, Notion, and Linear. It features a high-performance Kanban board with optimistic UI updates, live collaboration via WebSockets, and a robust backend architecture.
 
-![Version](https://img.shields.io/badge/version-1.0.0-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
+## 🏗 Architecture
 
-## ✨ Features
+Hintro AI follows a Client-Server architecture decoupled by a REST API and a real-time WebSocket layer.
 
-### 🎯 Core Functionality
-- ✅ **Kanban Board** - Drag-and-drop task management
-- ✅ **Real-time Collaboration** - See other users' changes instantly
-- ✅ **Optimistic Updates** - Instant UI feedback
-- ✅ **Task Management** - Create, edit, delete, and move tasks
-- ✅ **List Management** - Create and organize multiple lists
-- ✅ **Task Details** - Rich modal with priorities, labels, assignees
-- ✅ **Smooth Animations** - Professional micro-interactions
+### Frontend (Client)
 
-### 🎨 Design Excellence
-- ✅ **Professional UI** - Clean, minimalist design
-- ✅ **Inter Font** - Refined typography
-- ✅ **Zinc Color Palette** - Sophisticated grays
-- ✅ **Subtle Shadows** - Soft, diffused depth
-- ✅ **Micro-interactions** - Hover effects, transitions
-- ✅ **Custom Scrollbars** - Minimal, rounded
-- ✅ **Flash Animations** - Yellow highlight for real-time updates
+- **Framework**: React 18 + Vite (for ultra-fast HMR).
+- **State Management**: Zustand. We use a global store to manage board state and implement **Optimistic UI Updates**. When a user moves a task, the UI updates instantly before the server responds. If the server request fails, the state automatically reverts.
+- **Styling**: Tailwind CSS + Shadcn/UI for a clean, accessible, and professional design system (Zinc palette).
+- **Drag & Drop**: @dnd-kit/core for accessible, keyboard-friendly drag interactions.
 
-### 🔧 Technical Features
-- ✅ **RESTful API** - Express backend
-- ✅ **WebSocket Support** - Socket.io real-time events
-- ✅ **PostgreSQL Database** - Robust data persistence
-- ✅ **Prisma ORM** - Type-safe database access
-- ✅ **State Management** - Zustand stores
-- ✅ **Modern Drag & Drop** - @dnd-kit implementation
+### Backend (Server)
 
-## 🚀 Quick Start
+- **Runtime**: Node.js + Express.
+- **Database**: PostgreSQL accessed via Prisma ORM for type-safe queries.
+- **Real-Time Layer**: Socket.io. The server acts as a broadcaster. When an event occurs (e.g., `task:moved`), it validates the action, updates the DB, and broadcasts the event to all other clients in the specific `boardId` room.
+
+### Data Flow
+
+1. **User Action**: User drags a task.
+2. **Optimistic Update**: Frontend store updates immediately.
+3. **API Call**: REST Request (PATCH /tasks/:id/move) sent to server.
+4. **Persistence**: Server updates PostgreSQL.
+5. **Broadcast**: Server emits `task:moved` via Socket.io.
+6. **Sync**: Other connected clients receive the event and animate the change.
+
+## 🚀 Setup Instructions
 
 ### Prerequisites
-- Node.js 18+
-- PostgreSQL 14+
 
-### Installation
+- Node.js: v18 or higher
+- PostgreSQL: v14 or higher
+- Git
+
+### 1. Clone & Install
 
 ```bash
-# 1. Install dependencies
+git clone <repository-url>
+cd hintro-ai
+
+# Install Frontend Dependencies
 npm install
-cd backend && npm install && cd ..
 
-# 2. Set up PostgreSQL database
+# Install Backend Dependencies
+cd backend
+npm install
+```
+
+### 2. Database Configuration
+
+Ensure your PostgreSQL service is running. Create a new database:
+
+```bash
+# Terminal / Command Prompt
 createdb hintro_ai
+```
 
-# 3. Configure environment variables
-# Copy .env.example to .env and update values
+### 3. Environment Variables
 
-# 4. Run database migrations
+Create a `.env` file in the **backend** folder:
+
+```
+# backend/.env
+PORT=3001
+# Replace 'password' with your actual Postgres password
+DATABASE_URL="postgresql://postgres:password@localhost:5432/hintro_ai?schema=public"
+JWT_SECRET="your-super-secret-key-change-this"
+CORS_ORIGIN="http://localhost:5173"
+```
+
+Create a `.env` file in the **root** folder:
+
+```
+# .env (Frontend)
+VITE_API_URL="http://localhost:3001/api"
+VITE_SOCKET_URL="http://localhost:3001"
+```
+
+### 4. Database Migration
+
+Apply the Prisma schema to your database:
+
+```bash
 cd backend
 npm run prisma:migrate
+# Optional: Seed data if you have a seed script
+# npm run prisma:seed 
 cd ..
+```
 
-# 5. Start servers
-# Terminal 1 - Backend
-cd backend && npm run dev
+### 5. Run the Application
 
-# Terminal 2 - Frontend
+You need two terminal windows running simultaneously.
+
+**Terminal 1 (Backend)**:
+
+```bash
+cd backend
 npm run dev
 ```
 
-Visit **http://localhost:5173** 🎉
-
-📖 **Detailed Setup**: See [SETUP.md](SETUP.md) for comprehensive instructions.
-
-## 🛠 Tech Stack
-
-| Layer | Technology |
-|-------|-----------|
-| **Frontend** | React 18 + Vite |
-| **Styling** | Tailwind CSS + Shadcn/UI |
-| **State** | Zustand |
-| **Drag & Drop** | @dnd-kit/core |
-| **Real-time** | Socket.io |
-| **Backend** | Node.js + Express |
-| **Database** | PostgreSQL + Prisma ORM |
-| **Icons** | Lucide React |
-| **Toasts** | Sonner |
-
-## 📂 Project Structure
-
-```
-hintro-ai/
-├── backend/                    # Node.js + Express backend
-│   ├── prisma/
-│   │   └── schema.prisma      # Database schema
-│   ├── routes/                # API endpoints
-│   │   ├── boards.js
-│   │   ├── lists.js
-│   │   └── tasks.js
-│   ├── socket/                # WebSocket handlers
-│   │   └── index.js
-│   ├── db/
-│   │   └── prisma.js          # Database client
-│   ├── server.js              # Express app
-│   └── package.json
-├── src/
-│   ├── components/
-│   │   ├── ui/                # Shadcn/UI components
-│   │   │   ├── button.jsx
-│   │   │   ├── input.jsx
-│   │   │   ├── dialog.jsx
-│   │   │   ├── textarea.jsx
-│   │   │   └── separator.jsx
-│   │   ├── Board.jsx          # Main Kanban board
-│   │   ├── List.jsx           # Task list/column
-│   │   ├── TaskCard.jsx       # Individual task card
-│   │   ├── TaskModal.jsx      # Task detail modal
-│   │   └── Layout.jsx         # App layout with sidebar
-│   ├── store/
-│   │   ├── useBoardStore.js   # Board state (Zustand)
-│   │   └── useUIStore.js      # UI state (Zustand)
-│   ├── services/
-│   │   ├── api.js             # REST API client
-│   │   └── socket.js          # Socket.io client
-│   ├── hooks/
-│   │   └── useSocket.js       # Custom Socket hook
-│   ├── lib/
-│   │   └── utils.js           # Utility functions
-│   ├── App.jsx
-│   ├── main.jsx
-│   └── index.css
-├── SETUP.md                    # Detailed setup guide
-└── README.md
-```
-
-## 🎯 Feature Showcase
-
-### 🎨 Professional UI/UX
-
-**Kanban Board**
-- ✅ Drag-and-drop tasks with @dnd-kit (accessible & smooth)
-- ✅ Visual drag overlay with subtle rotation
-- ✅ Horizontal scrolling list container
-- ✅ Empty state placeholders
-
-**Task Cards**
-- ✅ Priority indicators (color-coded left border)
-- ✅ Drag handle (appears on hover)
-- ✅ Labels with pill design
-- ✅ Assignee avatars with gradients
-- ✅ Meta info (comments, attachments, due dates)
-- ✅ Hover lift animation (-translate-y-0.5)
-
-**Task Details Modal**
-- ✅ Inline editing for title & description
-- ✅ Priority selection with visual indicators
-- ✅ Label & assignee management
-- ✅ Comments section (ready)
-- ✅ Attachment support (ready)
-
-**Layout**
-- ✅ Collapsible sidebar (300ms smooth transition)
-- ✅ Board navigation with color indicators
-- ✅ User profile with gradient avatar
-- ✅ Responsive design
-
-### ⚡ Real-Time Collaboration
-
-**WebSocket Features**
-- ✅ Live task movements across all connected clients
-- ✅ **Yellow flash animation** when others move tasks
-- ✅ User presence (join/leave notifications)
-- ✅ Toast notifications for remote changes
-- ✅ Automatic reconnection
-
-**Optimistic Updates**
-- ✅ Instant UI feedback on all actions
-- ✅ Async API calls don't block UI
-- ✅ Automatic revert on API errors
-- ✅ Error toast with descriptions
-
-### 🔧 Backend & API
-
-**REST API**
-- ✅ Full CRUD for boards, lists, tasks
-- ✅ PostgreSQL with Prisma ORM
-- ✅ Express server with CORS & security
-- ✅ Error handling & logging
-
-**WebSocket Server**
-- ✅ Socket.io integration
-- ✅ Room-based events (per board)
-- ✅ User tracking & presence
-- ✅ Ping/pong for connection health
-
-## 🔌 API Reference
-
-### REST Endpoints
-
-```
-GET    /api/boards           # List all boards
-GET    /api/boards/:id       # Get board with lists & tasks
-POST   /api/boards           # Create board
-PATCH  /api/boards/:id       # Update board
-DELETE /api/boards/:id       # Delete board
-
-POST   /api/lists            # Create list
-PATCH  /api/lists/:id        # Update list
-DELETE /api/lists/:id        # Delete list (only if empty)
-
-POST   /api/tasks            # Create task
-PATCH  /api/tasks/:id        # Update task
-PATCH  /api/tasks/:id/move   # Move task (triggers animation)
-DELETE /api/tasks/:id        # Delete task
-```
-
-### WebSocket Events
-
-**Client → Server**
-```
-board:join         { boardId, user }
-board:leave        boardId
-cursor:move        { boardId, position, user }
-task:dragging      { boardId, taskId, position }
-task:typing        { boardId, taskId, user, isTyping }
-```
-
-**Server → Client**
-```
-user:joined        { socketId, user }
-user:left          { socketId, user }
-task:created       { listId, task }
-task:updated       task
-task:moved         { task, fromListId, toListId, animate: true }
-list:created       { boardId, list }
-board:updated      board
-```
-
-## 🧪 Testing Real-Time Features
-
-1. Open app in **two browser windows** side-by-side
-2. In Window 1: Drag a task to a different list
-3. In Window 2: Watch it **flash yellow** and smoothly appear! ✨
-4. Create a new task in Window 1
-5. See the toast notification in Window 2
-
-## 🎯 Future Enhancements
-
-### Authentication & Permissions
-- [ ] JWT authentication
-- [ ] User registration/login
-- [ ] Board-level permissions
-- [ ] Team management
-
-### Enhanced Features
-- [ ] Rich text editor for descriptions
-- [ ] File attachments (S3/CloudFlare R2)
-- [ ] Live comments system
-- [ ] @mentions & notifications
-- [ ] Activity feed
-- [ ] Task templates
-
-### Advanced Views
-- [ ] Calendar view
-- [ ] Timeline/Gantt chart
-- [ ] Table view with filters
-- [ ] Dashboard with analytics
-
-### DevOps & Scale
-- [ ] Docker setup
-- [ ] Redis for caching
-- [ ] CDN for static assets
-- [ ] E2E tests (Playwright)
-- [ ] Load testing
-
-## 🎨 Design Tokens
-
-### Colors
-- Primary Background: `bg-zinc-50/50`
-- Card Background: `bg-white`
-- Primary Text: `text-zinc-800`
-- Secondary Text: `text-zinc-500`
-- Borders: `border-zinc-200`
-- Accents: `bg-zinc-900`
-
-### Typography
-- Font: Inter
-- Letter Spacing: -0.015em
-- Primary: 400-600 weight
-- Headings: 600-700 weight
-
-### Spacing
-- Base unit: 4px (Tailwind default)
-- Generous padding: `p-4`, `p-6`
-- Component gaps: `gap-2`, `gap-3`
-
-### Transitions
-- Duration: 200ms
-- Easing: ease-in-out
-- Hover lifts: `-translate-y-0.5`
-- Active scales: `scale-95`
-
-## � Development
-
-### Commands
-
-**Frontend**
-```bash
-npm run dev          # Start Vite dev server (port 5173)
-npm run build        # Build for production
-npm run preview      # Preview production build
-```
-
-**Backend**
-```bash
-cd backend
-npm run dev              # Start with nodemon (port 3001)
-npm run prisma:studio    # Open database GUI
-npm run prisma:migrate   # Run migrations
-npm run prisma:generate  # Generate Prisma Client
-```
-
-### Best Practices
-
-1. **Use `cn()` utility** for conditional Tailwind classes
-2. **Prefer Shadcn/UI components** over custom ones
-3. **Always implement optimistic updates** for user actions
-4. **Add micro-interactions** to all interactive elements
-5. **Test real-time features** with multiple browser windows
-6. **Follow the design system** color palette & spacing
-7. **Add proper error handling** with toast notifications
-
-### Database Changes
+**Terminal 2 (Frontend)**:
 
 ```bash
-# 1. Modify prisma/schema.prisma
-# 2. Create migration
-cd backend
-npx prisma migrate dev --name your_change_description
-
-# 3. Generate updated Prisma Client
-npm run prisma:generate
+npm run dev
 ```
 
-## 🐛 Troubleshooting
+Visit http://localhost:5173 to use the app.
 
-See [SETUP.md](SETUP.md) for detailed troubleshooting.
+## 🔑 Demo Credentials
 
-**Quick fixes:**
-- Database errors → Check PostgreSQL is running
-- Port conflicts → Change PORT in backend/.env
-- Module errors → `rm -rf node_modules && npm install`
-- CORS errors → Verify CORS_ORIGIN matches frontend URL
+Since this is a self-hosted setup, there are no pre-seeded users by default. You can create your own account instantly:
 
-## 🔗 Resources
+1. **Open App**: Go to http://localhost:5173
+2. **Sign Up**: Click "Sign up" toggle.
+3. **Email**: demo@hintro.com
+4. **Password**: password123
+5. **Name**: Demo User
 
-- [Vite Documentation](https://vitejs.dev/)
-- [React Documentation](https://react.dev/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [Shadcn/UI](https://ui.shadcn.com/)
-- [dnd-kit](https://dndkit.com/)
-- [Zustand](https://zustand-demo.pmnd.rs/)
-- [Prisma](https://www.prisma.io/)
-- [Socket.io](https://socket.io/)
-- [Express](https://expressjs.com/)
+**Note**: Upon registration, a "My First Board" is automatically created for you.
 
-## 📄 License
+## 📖 API Documentation
 
-MIT License - See LICENSE file for details
+The backend exposes a RESTful API at http://localhost:3001/api. All protected routes require a `Authorization: Bearer <token>` header.
 
----
+### Auth
 
-**Built with ❤️ using modern web technologies**
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /auth/register | Create a new user & default board. |
+| POST | /auth/login | Authenticate and receive JWT. |
 
-A professional-grade task collaboration platform with attention to every detail - from typography to micro-interactions to real-time collaboration.
+### Boards
 
-✨ **Not your typical template** - Every pixel crafted with care.
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /boards | Fetch all boards the user is a member of. |
+| POST | /boards | Create a new board. |
+| GET | /boards/:id | Get full board data (Lists, Tasks, Members). |
+
+### Tasks
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | /tasks | Create a task in a list. |
+| PATCH | /tasks/:id | Update task details (title, priority, assignee). |
+| PATCH | /tasks/:id/move | Move task between lists (updates position). |
+| DELETE | /tasks/:id | Delete a task. |
+
+### Comments & Activity
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | /comments/:taskId | Fetch conversation history for a task. |
+| POST | /comments | Post a new comment. |
+| GET | /activity/:boardId | Fetch paginated activity logs for the board. |
+
+## ⚖️ Assumptions & Trade-offs
+
+### Assumptions
+
+- **Trust Environment**: The app assumes logged-in users are trusted members of the board. While basic role checks exist, granular permissions (e.g., "Viewer" vs "Editor") are not fully enforced on every route for simplicity.
+- **Single Region**: The WebSocket server is a single instance. For a global scale, a Redis adapter would be needed to sync events across multiple server instances.
+- **Data Volume**: Lists will typically contain <100 tasks. Virtualization is not implemented on the lists, so performance might degrade with thousands of tasks per list.
+
+### Trade-offs
+
+- **Optimistic UI vs. Consistency**:
+  - **Choice**: We prioritized speed. The UI updates instantly.
+  - **Trade-off**: In rare cases of server failure, the UI might "snap back" to the previous state, which can be jarring for the user. We mitigate this with toast error notifications.
+
+- **Authentication**:
+  - **Choice**: Standard JWT stored in localStorage.
+  - **Trade-off**: Vulnerable to XSS attacks if the app runs malicious scripts. A production version would use httpOnly cookies for better security.
+
+- **Database Polling vs. Sockets**:
+  - **Choice**: We use Sockets for "live" updates but HTTP for initial data fetching.
+  - **Trade-off**: This adds complexity (maintaining two data paths) but ensures data integrity and cacheability of the initial load.
+
+- **Drag and Drop Library**:
+  - **Choice**: @dnd-kit over react-beautiful-dnd.
+  - **Trade-off**: @dnd-kit is more modern and accessible but has a steeper learning curve and required custom collision detection logic for the Kanban board layout.
+
+## 🛠 Tech Stack Details
+
+| Layer | Technology | Reason |
+|-------|-----------|--------|
+| Frontend | React + Vite | Industry standard, massive ecosystem, high performance. |
+| Styling | Tailwind CSS | Rapid UI development, consistent design system. |
+| Components | Shadcn/UI | Accessible, copy-paste components that are easily customizable. |
+| Database | PostgreSQL | Robust relational data integrity (ACID compliance). |
+| ORM | Prisma | Best-in-class developer experience and type safety. |
+| Real-time | Socket.io | Reliable fallback mechanisms (WebSocket -> Polling) ensuring connectivity. |
