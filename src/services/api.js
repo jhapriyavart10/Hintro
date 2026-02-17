@@ -1,111 +1,61 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+import axios from 'axios'
 
-class ApiService {
-  // Boards
-  async getBoards() {
-    const response = await fetch(`${API_URL}/boards`)
-    if (!response.ok) throw new Error('Failed to fetch boards')
-    return response.json()
+// 1. Create the Axios Instance
+const api = axios.create({
+  baseURL: 'http://localhost:3001/api',
+  headers: {
+    'Content-Type': 'application/json',
+  },
+})
+
+// 2. Add Interceptors (Automatically attach Token)
+api.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => Promise.reject(error)
+)
+
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      // Auto-logout if token is invalid
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
   }
+)
 
-  async getBoard(boardId) {
-    const response = await fetch(`${API_URL}/boards/${boardId}`)
-    if (!response.ok) throw new Error('Failed to fetch board')
-    return response.json()
-  }
+// 3. Attach Helper Methods (The "Hybrid" Part)
+// This ensures api.getBoard() works AND api.get() works
 
-  async createBoard(data) {
-    const response = await fetch(`${API_URL}/boards`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to create board')
-    return response.json()
-  }
+// --- Boards ---
+api.getBoards = () => api.get('/boards')
+api.getBoard = (id) => api.get(`/boards/${id}`)
+api.createBoard = (data) => api.post('/boards', data)
+api.updateBoard = (id, data) => api.patch(`/boards/${id}`, data)
+api.deleteBoard = (id) => api.delete(`/boards/${id}`)
 
-  async updateBoard(boardId, data) {
-    const response = await fetch(`${API_URL}/boards/${boardId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to update board')
-    return response.json()
-  }
+// --- Lists ---
+api.createList = (data) => api.post('/lists', data)
+api.updateList = (id, data) => api.patch(`/lists/${id}`, data)
+api.deleteList = (id) => api.delete(`/lists/${id}`)
 
-  async deleteBoard(boardId) {
-    const response = await fetch(`${API_URL}/boards/${boardId}`, {
-      method: 'DELETE',
-    })
-    if (!response.ok) throw new Error('Failed to delete board')
-  }
+// --- Tasks ---
+api.createTask = (data) => api.post('/tasks', data)
+api.updateTask = (id, data) => api.patch(`/tasks/${id}`, data)
+api.moveTask = (id, data) => api.patch(`/tasks/${id}/move`, data)
+api.deleteTask = (id) => api.delete(`/tasks/${id}`)
 
-  // Lists
-  async createList(data) {
-    const response = await fetch(`${API_URL}/lists`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to create list')
-    return response.json()
-  }
+// --- Auth ---
+api.login = (data) => api.post('/auth/login', data)
+api.register = (data) => api.post('/auth/register', data)
 
-  async updateList(listId, data) {
-    const response = await fetch(`${API_URL}/lists/${listId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to update list')
-    return response.json()
-  }
-
-  async deleteList(listId) {
-    const response = await fetch(`${API_URL}/lists/${listId}`, {
-      method: 'DELETE',
-    })
-    if (!response.ok) throw new Error('Failed to delete list')
-  }
-
-  // Tasks
-  async createTask(data) {
-    const response = await fetch(`${API_URL}/tasks`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to create task')
-    return response.json()
-  }
-
-  async updateTask(taskId, data) {
-    const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to update task')
-    return response.json()
-  }
-
-  async moveTask(taskId, data) {
-    const response = await fetch(`${API_URL}/tasks/${taskId}/move`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    })
-    if (!response.ok) throw new Error('Failed to move task')
-    return response.json()
-  }
-
-  async deleteTask(taskId) {
-    const response = await fetch(`${API_URL}/tasks/${taskId}`, {
-      method: 'DELETE',
-    })
-    if (!response.ok) throw new Error('Failed to delete task')
-  }
-}
-
-export default new ApiService()
+export default api

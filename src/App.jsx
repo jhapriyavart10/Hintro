@@ -3,9 +3,9 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Layout from './components/Layout'
 import Board from './components/Board'
 import Login from './pages/Login'
+import Dashboard from './pages/Dashboard' // Import the new page
 import { Toaster } from 'sonner'
 
-// Simple Auth Guard
 const ProtectedRoute = ({ children }) => {
   const token = localStorage.getItem('token')
   if (!token) return <Navigate to="/login" replace />
@@ -17,29 +17,24 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<Login />} />
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Board />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Dashboard is now the home route */}
+        <Route path="/" element={
+          <ProtectedRoute>
+            <Dashboard />
+          </ProtectedRoute>
+        } />
+
+        {/* Board route now takes an ID */}
+        <Route path="/board/:boardId" element={
+          <ProtectedRoute>
+            <Layout>
+              <Board />
+            </Layout>
+          </ProtectedRoute>
+        } />
       </Routes>
-      <Toaster
-        position="bottom-right"
-        toastOptions={{
-          classNames: {
-            toast: 'bg-white border-zinc-200 text-zinc-900 shadow-lg',
-            title: 'text-zinc-900 font-medium',
-            description: 'text-zinc-500',
-            actionButton: 'bg-zinc-900 text-white',
-            cancelButton: 'bg-zinc-100 text-zinc-900',
-          },
-        }}
-      />
+      <Toaster position="bottom-right" />
     </BrowserRouter>
   )
 }

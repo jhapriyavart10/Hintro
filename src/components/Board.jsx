@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react'
+import { useParams } from 'react-router-dom'
 import {
   DndContext,
   DragOverlay,
@@ -20,7 +21,9 @@ import { useSocket } from '@/hooks/useSocket'
 import api from '@/services/api'
 import { toast } from 'sonner'
 
+
 const Board = () => {
+  const {boardId} = useParams()
   const [activeTask, setActiveTask] = useState(null)
   const [selectedTask, setSelectedTask] = useState(null)
   const [isAddingList, setIsAddingList] = useState(false)
@@ -41,13 +44,11 @@ const Board = () => {
     updateTask,
   } = useBoardStore()
 
-  // Initial Fetch - Hardcoded ID for MVP, normally comes from router params
   useEffect(() => {
-    // Replace with your actual Board ID from the database after creating one
-    // or use a mechanism to fetch the 'first available board'
-    const DEFAULT_BOARD_ID = 'product-roadmap' 
-    fetchBoard(DEFAULT_BOARD_ID)
-  }, [fetchBoard])
+    if (boardId) {
+      fetchBoard(boardId) // Use the real ID
+    }
+  }, [boardId, fetchBoard])
 
   const rawBoard = getActiveBoard()
 
